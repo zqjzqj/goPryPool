@@ -1,4 +1,4 @@
-module github.com/zqijun/proxyPool
+module github.com/zqjzqj/proxyPool
 
 go 1.14
 
