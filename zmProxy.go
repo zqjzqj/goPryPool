@@ -54,6 +54,7 @@ func (zm *ZmProxy) CreateProxies(num int, pool *Pool) ([]*Proxy, error) {
 			isp:       value.Get("isp").String(),
 			delayReleaseNum:       0,
 			timeoutCount:0,
+			expireAdvance:time.Second * 30,
 		})
 		return true
 	})

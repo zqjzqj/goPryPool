@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var DefaultExpireAdvance time.Duration = 0
+
 type Proxy struct {
 	pool *Pool
 	ipAddr string
@@ -27,6 +29,8 @@ type Proxy struct {
 	delayReleaseRNum int
 
 	timeoutCount uint8
+
+	expireAdvance time.Duration
 }
 
 func NewProxy(ip string, port uint64) *Proxy {
@@ -47,7 +51,12 @@ func NewProxy(ip string, port uint64) *Proxy {
 		delayReleaseNum:  0,
 		delayReleaseRNum: 0,
 		timeoutCount:0,
+		expireAdvance: DefaultExpireAdvance,
 	}
+}
+
+func (pry *Proxy) SetExpiredAdvance(t time.Duration) {
+	pry.expireAdvance = t
 }
 
 func (pry *Proxy) AddTimeoutCount() {
@@ -96,7 +105,7 @@ func (pry Proxy) GetIsp() string {
 //当前时间+30s 超过这个时间就算过期
 //因为如果只差几秒过期的代理拿出来可能会运行不完一套程序
 func (pry *Proxy) IsExpired() bool {
-	return pry.expire.Before(time.Now().Add(30 * time.Second))
+	return pry.expire.Before(time.Now().Add(pry.expireAdvance))
 }
 
 func (pry *Proxy) IsExpiredAndClose() bool {
