@@ -141,7 +141,12 @@ func (pry *Proxy) Close() {
 
 	pry.pool.mu.Lock()
 	pry.pool.openNum--
-	pry.pool.mu.Unlock()
+	if pry.pool.openNum == 0 && len(pry.pool.pryRequests) > 0 {
+		pry.pool.mu.Unlock()
+		pry.pool.CreateNewProxies()
+	} else {
+		pry.pool.mu.Unlock()
+	}
 
 	pry.isUse = false
 	pry.useNum -= 1
