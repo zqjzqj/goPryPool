@@ -269,11 +269,17 @@ func (p *Pool) CreateNewProxies() {
 func (p *Pool) GetPry() (*Proxy, error) {
 	var pry *Proxy
 	var err error
-	for i := 0; (i < p.maxOpen + 5); i++ {
+	for i := 0; (i < p.maxOpen + 10); i++ {
 		pry, err = p.get()
 		if err == nil {
+			if pry.useNumTotal <= 1 {
+				if pry.expireAdvanceAsNotUse > 0 && pry.expire.Before(time.Now().Add(pry.expireAdvanceAsNotUse)) {
+					continue
+				}
+			}
 			return pry, nil
 		}
+
 		if err == ErrWaitCreatedPry {
 			log.Println("wait created proxy...")
 			runtime.Gosched()

@@ -8,6 +8,7 @@ import (
 )
 
 var DefaultExpireAdvance time.Duration = 0
+var DefaultExpireAdvanceAsNotUse time.Duration = time.Minute * 1
 
 type Proxy struct {
 	pool *Pool
@@ -31,6 +32,7 @@ type Proxy struct {
 	timeoutCount uint8
 
 	expireAdvance time.Duration
+	expireAdvanceAsNotUse time.Duration
 }
 
 func NewProxy(ip string, port uint64) *Proxy {
@@ -52,6 +54,7 @@ func NewProxy(ip string, port uint64) *Proxy {
 		delayReleaseRNum: 0,
 		timeoutCount:0,
 		expireAdvance: DefaultExpireAdvance,
+		expireAdvanceAsNotUse:DefaultExpireAdvanceAsNotUse,
 	}
 }
 
@@ -130,6 +133,10 @@ func (pry *Proxy) IsUse() bool {
 
 func (pry *Proxy) GetUseNum() uint {
 	return pry.useNum
+}
+
+func (pry *Proxy) GetTotalUseNum() uint {
+	return pry.useNumTotal
 }
 
 func (pry *Proxy) Close() {
