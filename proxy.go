@@ -8,7 +8,7 @@ import (
 )
 
 var DefaultExpireAdvance time.Duration = 0
-var DefaultExpireAdvanceAsNotUse time.Duration = time.Minute * 1
+var DefaultExpireAdvanceAsNotUse time.Duration = 0
 
 type Proxy struct {
 	pool *Pool
