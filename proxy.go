@@ -35,21 +35,21 @@ type Proxy struct {
 	expireAdvanceAsNotUse time.Duration
 }
 
-func NewProxy(ip string, port uint64) *Proxy {
+func NewProxy(pool *Pool, ip string, port uint64, expire time.Time, isSSl bool, city string, isp string) *Proxy {
 	return &Proxy{
-		pool:             nil,
+		pool:             pool,
 		ipAddr:           ip,
 		port:             port,
 		createdAt:        time.Time{},
-		expire:           time.Time{},
-		isSSL:            false,
+		expire:           expire,
+		isSSL:            isSSl,
 		isUse:            false,
 		useNum:           0,
 		useNumTotal:      0,
 		mu:               sync.Mutex{},
 		isClosed:         false,
-		city:             "",
-		isp:              "",
+		city:             city,
+		isp:              isp,
 		delayReleaseNum:  0,
 		delayReleaseRNum: 0,
 		timeoutCount:0,
@@ -60,6 +60,10 @@ func NewProxy(ip string, port uint64) *Proxy {
 
 func (pry *Proxy) SetExpiredAdvance(t time.Duration) {
 	pry.expireAdvance = t
+}
+
+func (pry *Proxy) SetExpiredAdvanceAsNotUse(t time.Duration) {
+	pry.expireAdvanceAsNotUse = t
 }
 
 func (pry *Proxy) AddTimeoutCount() {
