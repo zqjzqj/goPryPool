@@ -234,7 +234,7 @@ func (p *Pool) putPryLocked(pry ...*Proxy) bool {
 			i++
 		}
 
-		if i == pryNum {
+		if i == pryNum - 1 {
 			return true
 		}
 
