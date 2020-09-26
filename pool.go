@@ -224,7 +224,7 @@ func (p *Pool) putPryLocked(pry ...*Proxy) bool {
 	if reqC > 0 {
 		i := 0
 		for key, req := range p.pryRequests {
-			if i == pryNum {
+			if i == pryNum - 1 {
 				break
 			}
 			delete(p.pryRequests, key)
