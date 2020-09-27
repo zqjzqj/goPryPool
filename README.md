@@ -10,6 +10,10 @@
 
     log.Println(pry.GetProxyUrl())
     
+    //释放代理 放回代理池
+    pry.Release()
+    pry.Close() 关闭代理 不在放回连接池
+    更多方法请查看源代码
 #自定义代理
     实现接口
     type Driver interface {
