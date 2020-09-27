@@ -54,6 +54,8 @@ type Pool struct {
 	waitDurationByPry int64
 
 	waitPryTimeoutForGet time.Duration
+
+	IsAutoCloseExpiredPry bool
 }
 
 func OpenPool(apiDriver Driver) *Pool {
@@ -73,6 +75,7 @@ func OpenPool(apiDriver Driver) *Pool {
 		waitDurationByPry: 0,
 		ctx:ctx,
 		waitPryTimeoutForGet:time.Second * 12,
+		IsAutoCloseExpiredPry:false,
 	}
 
 	go p.pryOpener()

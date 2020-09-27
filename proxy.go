@@ -1,6 +1,7 @@
 package goPryPool
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sync"
@@ -33,6 +34,7 @@ type Proxy struct {
 
 	expireAdvance time.Duration
 	expireAdvanceAsNotUse time.Duration
+	isListenExpired bool
 	err error
 }
 
@@ -56,6 +58,7 @@ func NewErrProxy(err error) *Proxy {
 		timeoutCount:     0,
 		expireAdvance:    0,
 		err:              err,
+		isListenExpired: false,
 	}
 }
 
@@ -79,6 +82,7 @@ func NewProxy(pool *Pool, ip string, port uint64, expire time.Time, isSSl bool, 
 		timeoutCount:0,
 		expireAdvance: DefaultExpireAdvance,
 		expireAdvanceAsNotUse:DefaultExpireAdvanceAsNotUse,
+		isListenExpired: false,
 	}
 }
 
@@ -112,6 +116,41 @@ func (pry *Proxy) SetUse() {
 	pry.useNum += 1
 	pry.useNumTotal += 1
 	pry.isUse = true
+}
+
+func (pry *Proxy) CreateListenAutoExpire() {
+	pry.mu.Lock()
+	defer pry.mu.Unlock()
+	pry.createListenAutoExpireLocked()
+}
+
+func (pry *Proxy) createListenAutoExpireLocked() {
+	if pry.pool.IsAutoCloseExpiredPry && !pry.isListenExpired {
+		go func() {
+			ctx, cc := context.WithCancel(pry.pool.ctx)
+			defer func() {
+				cc()
+				pry.mu.Lock()
+				pry.isListenExpired = false
+				pry.mu.Unlock()
+			}()
+			t := time.NewTicker(2 * time.Second)
+			defer t.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					pry.Close()
+					return
+				case <-t.C:
+					if pry.IsExpiredAndClose() {
+						return
+					}
+				}
+
+			}
+		}()
+		pry.isListenExpired = true
+	}
 }
 
 func (pry *Proxy) GetProxyIpAddr() string {
