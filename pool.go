@@ -331,7 +331,7 @@ func (p *Pool) get() (*Proxy, error) {
 
 	//没有闲置代理 并且已经创建打开的代理数大于等于最大限制数
 	if p.maxOpen > 0 && p.openNum >= p.maxOpen {
-		req := make(chan *Proxy)
+		req := make(chan *Proxy, 1)
 		reqKey := p.nextRequestKeyLocked()
 		p.pryRequests[reqKey] = req
 		p.waitRequestCount++
