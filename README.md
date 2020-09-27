@@ -2,9 +2,9 @@
 
     go get -u github.com/zqjzqj/goPryPool
 
-#暂只支持芝麻代理
+#暂只支持芝麻代理/黑洞代理
     使用前添加IP白名单
-    
+    //pool := OpenPool(&HdProxy{})
     pool := OpenPool(&ZmProxy{})
     pool.SetMaxOpen(2)
     

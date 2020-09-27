@@ -18,7 +18,7 @@ var ErrPryClosed = errors.New("对应代理已关闭")
 var ErrWaitCreatedPry = errors.New("等待创建新的代理")
 var ErrMaxOpenCreatedPry = errors.New("已达到最大创建代理，无法创建新的代理")
 var ErrPutCreatedPry = errors.New("写入代理池失败")
-
+var ErrWaitPryTimeout = errors.New("等待获取代理超时")
 type Pool struct {
 	driver Driver
 
@@ -52,6 +52,8 @@ type Pool struct {
 	closed  bool
 
 	waitDurationByPry int64
+
+	waitPryTimeoutForGet time.Duration
 }
 
 func OpenPool(apiDriver Driver) *Pool {
@@ -70,11 +72,20 @@ func OpenPool(apiDriver Driver) *Pool {
 		closed:               false,
 		waitDurationByPry: 0,
 		ctx:ctx,
+		waitPryTimeoutForGet:time.Second * 12,
 	}
 
 	go p.pryOpener()
 	return p
 }
+
+func (p *Pool) SetWaitPryTimeoutForGet(duration time.Duration) {
+	if duration <= 0 {
+		return
+	}
+	p.waitPryTimeoutForGet = duration
+}
+
 
 func (p *Pool) SetMaxOpen(num int) {
 	p.mu.Lock()
@@ -226,6 +237,7 @@ func (p *Pool) putPryLocked(pry ...*Proxy) bool {
 			delete(p.pryRequests, key)
 			pry[i].SetUse()
 			req <- pry[i]
+			close(req)
 			p.waitRequestCount--
 			i++
 		}
@@ -282,7 +294,6 @@ func (p *Pool) GetPry() (*Proxy, error) {
 			}
 			return pry, nil
 		}
-
 		if err == ErrWaitCreatedPry {
 			log.Println("wait created proxy...")
 			runtime.Gosched()
@@ -291,6 +302,11 @@ func (p *Pool) GetPry() (*Proxy, error) {
 			log.Println("proxy expired...")
 			runtime.Gosched()
 		}
+
+		if err == ErrWaitPryTimeout {
+			return nil, err
+		}
+
 	}
 	return nil, err
 }
@@ -338,13 +354,19 @@ func (p *Pool) get() (*Proxy, error) {
 		p.mu.Unlock()
 
 		waitStart := time.Now()
+		t := time.NewTicker(p.waitPryTimeoutForGet)
 		select {
 		case <-p.ctx.Done():
-			delete(p.pryRequests, reqKey)
+			p.mu.Lock()
+			_, ok := p.pryRequests[reqKey]
+			if ok {
+				delete(p.pryRequests, reqKey)
+				close(req)
+			}
+			p.mu.Unlock()
 			atomic.AddInt64(&p.waitDurationByPry, int64(time.Since(waitStart)))
 			return nil, p.ctx.Err()
 		case pry, ok := <-req:
-			delete(p.pryRequests, reqKey)
 			atomic.AddInt64(&p.waitDurationByPry, int64(time.Since(waitStart)))
 			if !ok {
 				return nil, ErrPoolClosed
@@ -360,6 +382,15 @@ func (p *Pool) get() (*Proxy, error) {
 				return nil, ErrPryExpired
 			}
 			return pry, nil
+		case <-t.C:
+			p.mu.Lock()
+			_, ok := p.pryRequests[reqKey]
+			if ok {
+				delete(p.pryRequests, reqKey)
+				close(req)
+			}
+			p.mu.Unlock()
+			return nil, ErrWaitPryTimeout
 		}
 	}
 	p.mu.Unlock()
