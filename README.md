@@ -9,3 +9,9 @@
     }
 
     log.Println(pry.GetProxyUrl())
+    
+#自定义代理
+    实现接口
+    type Driver interface {
+    	CreateProxies(num int, pool *Pool) ([]*Proxy, error)
+    }
