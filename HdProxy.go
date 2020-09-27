@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/tidwall/gjson"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -23,7 +22,6 @@ func (hd *HdProxy) CreateProxies(num int, pool *Pool) ([]*Proxy, error) {
 	defer hd.mu.Unlock()
 	proxyRet := make([]*Proxy, 0, num)
 	num2 := num
-	log.Println("获取代理数：", num2, len(proxyRet))
 	RE:
 	reqUrl := fmt.Sprintf("http://ip.ipjldl.com/index.php/api/entry?method=proxyServer.hdtiqu_api_url&packid=0&fa=0&groupid=0&fetch_key=&qty=%d&time=1&port=1&format=json&ss=5&css=&ipport=1&et=1&pi=1&co=1&pro=&city=&dt=1&usertype=4", num2)
 	resp, err := http.Get(reqUrl)
@@ -50,7 +48,6 @@ func (hd *HdProxy) CreateProxies(num int, pool *Pool) ([]*Proxy, error) {
 		}
 		//处理一下过期时间 最多5分钟
 		if expire.After(now5m) {
-			log.Println("跳过代理：", value.Get("IpAddress"), value.Get("ExpireTime").String())
 			return true
 		}
 		ipAndPort := strings.Split(value.Get("IP").String(), ":")
