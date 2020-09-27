@@ -167,15 +167,8 @@ func (p *Pool) createPry(num int) error {
 			return ErrMaxOpenCreatedPry
 		}
 	}
-	cpc := 0
-	RE:
 	pry, err := p.driver.CreateProxies(num, p)
 	if err != nil {
-		if cpc < 5 {
-			cpc++
-			time.Sleep(1 * time.Second)
-			goto RE
-		}
 		p.openNum -= num
 		return err
 	}
