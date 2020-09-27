@@ -126,7 +126,10 @@ func (p *Pool) pryOpener() {
 		case num := <-p.openerCh:
 			err := p.createPry(int(num))
 			if err != nil {
-				log.Println(err)
+				errPry := NewErrProxy(err)
+				for _, v := range p.pryRequests {
+					v <- errPry
+				}
 			}
 		}
 	}
@@ -224,7 +227,7 @@ func (p *Pool) putPryLocked(pry ...*Proxy) bool {
 	if reqC > 0 {
 		i := 0
 		for key, req := range p.pryRequests {
-			if i == pryNum - 1 {
+			if i == pryNum {
 				break
 			}
 			delete(p.pryRequests, key)
@@ -234,7 +237,7 @@ func (p *Pool) putPryLocked(pry ...*Proxy) bool {
 			i++
 		}
 
-		if i == pryNum - 1 {
+		if i == pryNum {
 			return true
 		}
 
@@ -348,11 +351,14 @@ func (p *Pool) get() (*Proxy, error) {
 			atomic.AddInt64(&p.waitDurationByPry, int64(time.Since(waitStart)))
 			return nil, p.ctx.Err()
 		case pry, ok := <-req:
+			delete(p.pryRequests, reqKey)
 			atomic.AddInt64(&p.waitDurationByPry, int64(time.Since(waitStart)))
 			if !ok {
 				return nil, ErrPoolClosed
 			}
-
+			if pry.err != nil {
+				return nil, pry.err
+			}
 			if pry.IsClosed() {
 				return nil, ErrPryClosed
 			}

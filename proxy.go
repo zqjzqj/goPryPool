@@ -33,6 +33,30 @@ type Proxy struct {
 
 	expireAdvance time.Duration
 	expireAdvanceAsNotUse time.Duration
+	err error
+}
+
+func NewErrProxy(err error) *Proxy {
+	return &Proxy{
+		pool:             nil,
+		ipAddr:           "",
+		port:             0,
+		createdAt:        time.Time{},
+		expire:           time.Time{},
+		isSSL:            false,
+		isUse:            false,
+		useNum:           0,
+		useNumTotal:      0,
+		mu:               sync.Mutex{},
+		isClosed:         false,
+		city:             "",
+		isp:              "",
+		delayReleaseNum:  0,
+		delayReleaseRNum: 0,
+		timeoutCount:     0,
+		expireAdvance:    0,
+		err:              err,
+	}
 }
 
 func NewProxy(pool *Pool, ip string, port uint64, expire time.Time, isSSl bool, city string, isp string) *Proxy {
