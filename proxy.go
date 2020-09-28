@@ -173,6 +173,14 @@ func (pry *Proxy) GetProxyIpAddr() string {
 	return fmt.Sprintf("%s:%d", pry.ipAddr, pry.port)
 }
 
+func (pry Proxy) GetIpAddr() string {
+	return pry.ipAddr
+}
+
+func (pry Proxy) GetPort() uint64 {
+	return pry.port
+}
+
 func (pry *Proxy) GetProxyUrl() string {
 	if !pry.isSSL {
 		return fmt.Sprintf("http://%s:%d", pry.ipAddr, pry.port)
