@@ -37,6 +37,7 @@ type Proxy struct {
 	isListenExpired bool
 	err error
 	expiredCh chan struct{}
+	cancelListenExpired chan struct{}
 }
 
 func NewErrProxy(err error) *Proxy {
@@ -134,9 +135,24 @@ func (pry *Proxy) GetExpiredCh() <-chan struct{} {
 	return pry.expiredCh
 }
 
+func (pry *Proxy) cancelListenAutoExpireLocked() {
+	if pry.isListenExpired {
+		pry.cancelListenExpired <- struct{}{}
+	}
+	return
+}
+
+func (pry *Proxy) CancelListenAutoExpire() {
+	pry.mu.Lock()
+	defer pry.mu.Unlock()
+	pry.cancelListenAutoExpireLocked()
+	return
+}
+
 func (pry *Proxy) createListenAutoExpireLocked() {
 	if pry.pool.IsAutoCloseExpiredPry && !pry.isListenExpired {
 		pry.expiredCh = make(chan struct{}, 1)
+		pry.cancelListenExpired = make(chan struct{}, 1)
 		go func() {
 			ctx, cc := context.WithCancel(pry.pool.ctx)
 			t := time.NewTicker(2 * time.Second)
@@ -150,6 +166,7 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 				case pry.expiredCh <- struct{}{}:
 				}
 				close(pry.expiredCh)
+				close(pry.cancelListenExpired)
 				pry.mu.Unlock()
 				t.Stop()
 			}()
@@ -162,6 +179,8 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 					if pry.IsExpiredAndClose() {
 						return
 					}
+				case <-pry.cancelListenExpired:
+					return
 				}
 			}
 		}()
@@ -249,6 +268,7 @@ func (pry *Proxy) Close() {
 	pry.isUse = false
 	pry.useNum -= 1
 	pry.isClosed = true
+	pry.cancelListenAutoExpireLocked()
 }
 
 //释放一个代理  在代理用完之后调用此方法
