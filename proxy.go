@@ -82,7 +82,7 @@ func NewProxy(pool *Pool, ip string, port uint64, expire time.Time, isSSl bool, 
 		timeoutCount:0,
 		expireAdvance: DefaultExpireAdvance,
 		expireAdvanceAsNotUse:DefaultExpireAdvanceAsNotUse,
-		isListenExpired: false,
+		isListenExpired: true,
 	}
 }
 
