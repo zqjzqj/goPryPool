@@ -75,7 +75,7 @@ func OpenPool(apiDriver Driver) *Pool {
 		waitDurationByPry: 0,
 		ctx:ctx,
 		waitPryTimeoutForGet:time.Second * 12,
-		IsAutoCloseExpiredPry:false,
+		IsAutoCloseExpiredPry:true,
 	}
 
 	go p.pryOpener()
