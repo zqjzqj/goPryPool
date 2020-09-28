@@ -44,6 +44,14 @@ func TestAutoClosedProxy(t *testing.T) {
 	if pry.IsListenExpired() {
 		log.Println("正在监听代理自动过期")
 	}
+
+	go func() {
+		select {
+			case <-pry.GetExpiredCh():
+				log.Println(pry.GetProxyUrl() + "已过期.............")
+		}
+	}()
+
 	log.Println("准备获取代理2")
 	pry2, err := pool.GetPry()
 	if err != nil {

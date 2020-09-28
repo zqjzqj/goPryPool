@@ -36,6 +36,7 @@ type Proxy struct {
 	expireAdvanceAsNotUse time.Duration
 	isListenExpired bool
 	err error
+	expiredCh chan struct{}
 }
 
 func NewErrProxy(err error) *Proxy {
@@ -129,8 +130,13 @@ func (pry *Proxy) CreateListenAutoExpire() {
 	pry.createListenAutoExpireLocked()
 }
 
+func (pry *Proxy) GetExpiredCh() <-chan struct{} {
+	return pry.expiredCh
+}
+
 func (pry *Proxy) createListenAutoExpireLocked() {
 	if pry.pool.IsAutoCloseExpiredPry && !pry.isListenExpired {
+		pry.expiredCh = make(chan struct{}, 1)
 		go func() {
 			ctx, cc := context.WithCancel(pry.pool.ctx)
 			t := time.NewTicker(2 * time.Second)
@@ -138,6 +144,12 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 				cc()
 				pry.mu.Lock()
 				pry.isListenExpired = false
+				t := time.NewTimer(time.Second * 5)
+				select {
+				case <-t.C:
+				case pry.expiredCh <- struct{}{}:
+				}
+				close(pry.expiredCh)
 				pry.mu.Unlock()
 				t.Stop()
 			}()
@@ -151,7 +163,6 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 						return
 					}
 				}
-
 			}
 		}()
 		pry.isListenExpired = true
