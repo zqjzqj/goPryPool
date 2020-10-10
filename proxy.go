@@ -264,10 +264,8 @@ func (pry *Proxy) Close() {
 	} else {
 		pry.pool.mu.Unlock()
 	}
-	if pry.isUse {
-		pry.isUse = false
-		pry.useNum -= 1
-	}
+	pry.isUse = false
+	pry.useNum = 0
 	pry.isClosed = true
 	pry.cancelListenAutoExpireLocked()
 }
@@ -313,7 +311,7 @@ func (pry *Proxy) Release() bool {
 		}
 	}
 	pry.isUse = false
-	pry.useNum -= 1
+	pry.useNum = 0
 	pry.delayReleaseRNum = 0
 	pry.delayReleaseNum = 0
 	pry.mu.Unlock()
