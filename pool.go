@@ -56,6 +56,8 @@ type Pool struct {
 	waitPryTimeoutForGet time.Duration
 
 	IsAutoCloseExpiredPry bool
+
+	MaxPryUseNum uint
 }
 
 func OpenPool(apiDriver Driver) *Pool {
@@ -294,6 +296,9 @@ func (p *Pool) GetPry() (*Proxy, error) {
 				if pry.expireAdvanceAsNotUse > 0 && pry.expire.Before(time.Now().Add(pry.expireAdvanceAsNotUse)) {
 					continue
 				}
+			}
+			if p.MaxPryUseNum > 0 {
+				pry.MaxUseNum = p.MaxPryUseNum
 			}
 			return pry, nil
 		}
