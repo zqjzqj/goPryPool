@@ -38,6 +38,7 @@ type Proxy struct {
 	err error
 	expiredCh chan struct{}
 	cancelListenExpired chan struct{}
+	MaxUseNum uint
 }
 
 func NewErrProxy(err error) *Proxy {
@@ -85,6 +86,7 @@ func NewProxy(pool *Pool, ip string, port uint64, expire time.Time, isSSl bool, 
 		expireAdvance: DefaultExpireAdvance,
 		expireAdvanceAsNotUse:DefaultExpireAdvanceAsNotUse,
 		isListenExpired: false,
+		MaxUseNum: 0,
 	}
 }
 
@@ -281,6 +283,10 @@ func (pry *Proxy) Release() bool {
 		return true
 	}
 
+	if pry.MaxUseNum > 0 && pry.useNumTotal <= pry.MaxUseNum {
+		pry.Close()
+		return true
+	}
 	pry.mu.Lock()
 	if pry.isClosed {
 		log.Println("Release： already closed....")
