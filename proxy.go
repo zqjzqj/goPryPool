@@ -1,7 +1,6 @@
 package goPryPool
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -165,10 +164,8 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 		pry.expiredCh = make(chan struct{}, 1)
 		pry.cancelListenExpired = make(chan struct{}, 1)
 		go func() {
-			ctx, cc := context.WithCancel(pry.pool.ctx)
 			t := time.NewTicker(2 * time.Second)
 			defer func() {
-				cc()
 				pry.mu.Lock()
 				pry.isListenExpired = false
 				t := time.NewTimer(time.Second * 5)
@@ -183,7 +180,7 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 			}()
 			for {
 				select {
-				case <-ctx.Done():
+				case <-pry.pool.ctx.Done():
 					pry.Close()
 					return
 				case <-t.C:
