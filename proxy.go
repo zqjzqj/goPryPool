@@ -95,7 +95,7 @@ func (pry Proxy) GetPoolDriverName() string {
 	if pry.pool == nil {
 		return ""
 	}
-	ty := reflect.TypeOf(pry.pool)
+	ty := reflect.TypeOf(pry.pool.driver)
 	return ty.Elem().Name()
 }
 
