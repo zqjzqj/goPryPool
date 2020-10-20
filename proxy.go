@@ -163,6 +163,7 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 	if pry.pool.IsAutoCloseExpiredPry && !pry.isListenExpired {
 		pry.expiredCh = make(chan struct{}, 1)
 		pry.cancelListenExpired = make(chan struct{}, 1)
+		pry.isListenExpired = true
 		go func() {
 			t := time.NewTicker(2 * time.Second)
 			defer func() {
@@ -192,7 +193,6 @@ func (pry *Proxy) createListenAutoExpireLocked() {
 				}
 			}
 		}()
-		pry.isListenExpired = true
 	}
 }
 
