@@ -294,6 +294,11 @@ func (p *Pool) GetPry() (*Proxy, error) {
 	var pry *Proxy
 	var err error
 	for i := 0; (i < p.maxOpen + 10); i++ {
+		select {
+		case <-p.ctx.Done():
+			return nil, ErrPoolClosed
+		default:
+		}
 		pry, err = p.get()
 		if err == nil {
 			if pry.useNumTotal <= 1 {
