@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -88,6 +89,14 @@ func NewProxy(pool *Pool, ip string, port uint64, expire time.Time, isSSl bool, 
 		isListenExpired: false,
 		MaxUseNum: 0,
 	}
+}
+
+func (pry Proxy) GetPoolDriverName() string {
+	if pry.pool == nil {
+		return ""
+	}
+	ty := reflect.TypeOf(pry.pool)
+	return ty.Elem().Name()
 }
 
 func (pry Proxy) IsListenExpired() bool {

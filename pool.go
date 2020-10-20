@@ -84,6 +84,10 @@ func OpenPool(apiDriver Driver) *Pool {
 	return p
 }
 
+func (p *Pool) GetDriver() Driver {
+	return p.driver
+}
+
 func (p *Pool) SetWaitPryTimeoutForGet(duration time.Duration) {
 	if duration <= 0 {
 		return
