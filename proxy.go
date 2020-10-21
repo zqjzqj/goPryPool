@@ -18,6 +18,7 @@ type Proxy struct {
 	createdAt time.Time
 	expire time.Time
 	isSSL bool
+	IsSocks5 bool
 	isUse bool
 	useNum uint
 	useNumTotal uint
@@ -209,6 +210,9 @@ func (pry Proxy) GetPort() uint64 {
 }
 
 func (pry *Proxy) GetProxyUrl() string {
+	if pry.IsSocks5 {
+		return fmt.Sprintf("socks5://%s:%d", pry.ipAddr, pry.port)
+	}
 	if !pry.isSSL {
 		return fmt.Sprintf("http://%s:%d", pry.ipAddr, pry.port)
 	}
