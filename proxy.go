@@ -293,7 +293,7 @@ func (pry *Proxy) Release() bool {
 		return true
 	}
 
-	if pry.MaxUseNum > 0 && pry.useNumTotal <= pry.MaxUseNum {
+	if pry.MaxUseNum > 0 && pry.useNumTotal >= pry.MaxUseNum {
 		pry.Close()
 		return true
 	}
